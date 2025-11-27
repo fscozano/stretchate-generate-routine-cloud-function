@@ -1,0 +1,10 @@
+{
+  "name": "mistral-service-function",
+  "version": "1.0.0",
+  "description": "Cloud function per integrazione Mistral AI",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@mistralai/mistralai": "^1.0.0"
+  }
+}

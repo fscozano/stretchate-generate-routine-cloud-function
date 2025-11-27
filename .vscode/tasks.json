@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run JavaScript",
+			"type": "shell",
+			"command": "node index.js",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "Run Local Test",
+			"type": "shell",
+			"command": "node local_test.js",
+			"isBackground": false,
+			"group": "test"
+		}
+	]
+}
