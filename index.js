@@ -7,17 +7,14 @@ import { Mistral } from '@mistralai/mistralai';
 class MistralService {
   constructor(apiKey, logger) {
     this.logger = logger;
-    // Controlla se siamo in modalità demo (chiave vuota o stringa specifica)
-    this.isDemo = !apiKey || apiKey === 'demo-key';
     
-    if (this.isDemo) {
-      this.client = null;
-      this.logger('Mistral Service inizializzato in modalità DEMO (no API key)');
-    } else {
-      // Inizializzazione del client Mistral
-      this.client = new Mistral({ apiKey: apiKey });
-      this.logger('Mistral Service inizializzato con API key');
+    if (!apiKey) {
+      throw new Error('Mistral API Key mancante');
     }
+
+    // Inizializzazione del client Mistral
+    this.client = new Mistral({ apiKey: apiKey });
+    this.logger('Mistral Service inizializzato con API key');
   }
 
   /**
@@ -28,13 +25,6 @@ class MistralService {
    * @returns {Promise<string>} - Il testo della risposta.
    */
   async sendMessage({ systemPrompt, userMessage, maxTokens = 1000 }) {
-    // Simulazione comportamento Dart: se il client è null (demo), generiamo errore o risposta fittizia.
-    if (!this.client) {
-      const error = new Error('Tentativo di inviare messaggio in modalità DEMO senza client attivo.');
-      this.logger(error.message);
-      throw error;
-    }
-
     try {
       // Mistral gestisce il system prompt come un messaggio con ruolo 'system'
       // all'interno dell'array dei messaggi, diversamente da Claude che ha un parametro dedicato.
@@ -79,15 +69,15 @@ export default async ({ req, res, log, error }) => {
   // 1. Recupero della API Key dalle variabili d'ambiente di Appwrite
   const apiKey = process.env.MISTRAL_API_KEY || '';
 
-  // 2. Inizializzazione del servizio
-  const mistralService = new MistralService(apiKey, log);
-
   // 3. Verifica metodo HTTP (opzionale ma consigliato)
   if (req.method !== 'POST') {
     return res.json({ error: 'Method not allowed' }, 405);
   }
 
   try {
+    // 2. Inizializzazione del servizio
+    const mistralService = new MistralService(apiKey, log);
+
     // 4. Parsing del body della richiesta
     // Appwrite fornisce il body già parsato se è JSON, altrimenti lo parsa qui.
     const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -100,14 +90,6 @@ export default async ({ req, res, log, error }) => {
         success: false, 
         error: 'Parametri mancanti: systemPrompt e userMessage sono obbligatori.' 
       }, 400);
-    }
-
-    if (mistralService.isDemo) {
-      return res.json({
-        success: true,
-        message: "Modalità DEMO: Il servizio è attivo. Nessuna chiamata API reale a Mistral.",
-        data: `[DEMO OUTPUT] Ho ricevuto il tuo messaggio: "${userMessage}". Questa è una risposta simulata per testare il flusso.`
-      });
     }
 
     // 5. Esecuzione della chiamata
